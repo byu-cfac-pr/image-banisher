@@ -19,15 +19,3 @@ def crop_paths(paths, base_path):
         if index > -1:
             cropped.append(path[index:])
     return cropped
-
-"""
-_image_paths = []
-_image_urls = []
-with open("./image_paths.log") as f:
-    _image_paths = f.read().splitlines()
-with open("./image_urls.log") as f:
-    _image_urls = f.read().splitlines()
-
-unreferenced = get_unreferenced_image_paths(_image_paths, _image_urls, 'cfac-sandbox.byu.edu')
-print(len(unreferenced))
-"""

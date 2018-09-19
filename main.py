@@ -1,14 +1,23 @@
 from lib.wordpress import get_wordpress_pages
 from lib.analyze_har import get_images_urls
 from lib.ssh_client import Client
-from lib.remote import get_all_image_paths
+from lib.remote import get_all_image_paths, delete_images
 from lib.cross_reference import get_unreferenced_image_paths
 from lib.backup import create_backup
 from pprint import pprint
 from time import time
 
-# TODO:
-# https://medium.com/@keagileageek/paramiko-how-to-ssh-and-file-transfers-with-python-75766179de73
+"""
+@author: Chase Williams
+Image Banishment Wizard that deletes unreferenced images for a Wordpress website.
+"""
+
+def yesno():
+    x = input()
+    while x is not 'y' and x is not 'n':
+        print("Invalid input")
+        x = input()
+    return x
 
 print("Welcome to the Image Banisher wizard!")
 # TODO:
@@ -25,15 +34,21 @@ KEY_PATH = input("key path: ")
 PASSPHRASE = input("passphrase: ")
 print("Please provide the path to the root folder you wish to initiate image banishment (probably at ..../wp-content/uploads/)")
 BANISHMENT_PATH = input()
-print("Where would you like to store a backup of {0} on your local machine?".format(BANISHMENT_PATH))
-BACKUP_PATH = input()
+print("Would you like to create a backup? (y/n)")
+if yesno() == 'y':
+    CREATE_BACKUP = True
+else:
+    CREATE_BACKUP = False
+if CREATE_BACKUP:
+    print("Where would you like to store a backup of {0} on your local machine?".format(BANISHMENT_PATH))
+    BACKUP_PATH = input()
 
-# TODO:
-# need to also ask for Box information and backup method
+print("Only delete images under the /YYYY/MM/ folders? (y/n)")
+if yesno() == 'y':
+    YEAR_MONTH_IMAGES_ONLY = True
+else:
+    YEAR_MONTH_IMAGES_ONLY = False
 
-
-# TODO:
-# print out all entered information
 print("Do you wish to start image banishment? (y/n)")
 if input() == 'y':
     print("Be patient, this might take a while")
@@ -59,14 +74,12 @@ if input() == 'y':
     with open('images_to_delete.log', 'w') as f:
         for path in unreferenced:
             f.write(path + "\n")
-    print("Unreferenced images identified. {0} seconds so far.\n{1} / {2} images will be banished".format(time() - start_time, len(unreferenced), len(image_paths)))
+    print("Unreferenced images identified. {0} seconds so far.\n{1} / {2} images are unreferenced".format(time() - start_time, len(unreferenced), len(image_paths)))
 
-    ## TODO:
-    # create backup (of /uploads/ folder or BANISHMENT_PATH, not entire website)
+    if CREATE_BACKUP:
+        create_backup(BANISHMENT_PATH, BACKUP_PATH, client)
 
-    create_backup(BANISHMENT_PATH, BACKUP_PATH, client)
-    ## TODO:
-    # copy unreferenced images to archive location
+    delete_images(unreferenced, client, YEAR_MONTH_IMAGES_ONLY)
 
     print("Finished! Banishment took {0} seconds".format(time() - start_time))
     # TODO:

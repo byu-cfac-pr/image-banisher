@@ -2,13 +2,33 @@
 import re
 from lib.analyze_har import filter_image_urls
 from progress.spinner import Spinner
+from progress.bar import IncrementalBar
+
 # handles all remote work
+##TODO:
+# asynchronize the calls?
+
+def delete_images(paths, ssh_client, year_month_images_only):
+    paths = [path for path in paths if is_year_month(path)]
+    print("Banishing {0} images".format(len(paths)))
+    suffix = '%(percent)d%% [%(elapsed_td)s / %(eta)d / %(eta_td)s]'
+    bar = IncrementalBar('Deleting Images', max=len(paths), suffix=suffix)
+    for path in paths:
+        ssh_client.do("rm -f {0}".format(path))
+        bar.next()
+    bar.finish()
 
 def get_all_image_paths(ssh_client, directory):
     ssh_client.do("cd " + directory)
     spinner = Spinner('Crawling...')
     paths = crawl_directory(ssh_client, directory, spinner)
+    print()
     return filter_image_urls(paths)
+
+def is_year_month(path):
+    indices = [m.start() for m in re.finditer("[0-9][0-9][0-9][0-9]/[0-9][0-9]", path)]
+    # if it finds a match, indices will be populated
+    return len(indices) > 0
 
 
 def crawl_directory(ssh_client, directory, spinner):
@@ -40,11 +60,3 @@ def get_names_only(data):
             print(indices)
         names.append(name.strip())
     return names
-"""
-from ssh_client import Client
-c = Client('cfacprwe', 'cfacprweb.byu.edu', './id_rsa', 'iuch2K284')
-result = get_all_image_paths(c, '/home/cfacprwe/public_html/cfac-sandbox.byu.edu/wp-content/uploads')
-with open('image_paths.log', 'w') as f:
-    for path in result:
-        f.write(path + "\n")
-"""

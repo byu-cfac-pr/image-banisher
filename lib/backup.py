@@ -5,11 +5,15 @@ import datetime
 from progress.bar import IncrementalBar
 from progress.spinner import Spinner
 
+##TODO:
+# asynchronize the calls?
+
 def create_backup(remote_path, local_path, client):
     sftp = client.client.open_sftp()
     print("Collecting paths to copy")
     spinner = Spinner('Collecting...')
     paths = sftp_walk(sftp, remote_path, spinner)
+    print()
     backup_path = os.path.join(local_path, 'backup-' + str(datetime.datetime.now()))
     os.mkdir(backup_path)
     index = len(remote_path)
@@ -52,10 +56,3 @@ def sftp_walk(sftp, directory, spinner):
         paths += sftp_walk(sftp, os.path.join(directory, f), spinner)
 
     return paths
-"""
-from ssh_client import Client
-client = Client('cfacprwe', 'cfacprweb.byu.edu', './id_rsa', 'iuch2K284')
-
-paths = create_backup('/home/cfacprwe/public_html/cfac-sandbox.byu.edu/wp-content/uploads', '/Users/chasew/Downloads/', client)
-print(len(paths))
-"""
