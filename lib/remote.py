@@ -37,7 +37,7 @@ def crawl_directory(ssh_client, directory, spinner):
     files = ssh_client.do("ls -l {0}| grep \"^-\"".format(directory))
     directories = ssh_client.do("ls -l {0}| grep \"^d\"".format(directory))
 
-    paths = [directory + name for name in get_names_only(files)]
+    paths = [directory + "/" + name for name in get_names_only(files)]
     for folder in get_names_only(directories):
         new_path = directory + "/" + folder
         paths += crawl_directory(ssh_client, new_path, spinner)
