@@ -13,6 +13,7 @@ import requests
 import re
 import numpy as np
 from threading import Thread
+from queue import Queue
 ## TODO:
 # need to add some selenium logic
 # - scroll through a website to force loading of all images
@@ -21,21 +22,28 @@ from threading import Thread
 ## TODO: 
 # use threading in order to drastically speed this process up. 
 
-def get_image_urls(page_urls):
+def get_images_urls(page_urls):
+    print('5 WORKER THREADS BEING INITIALIZED')
     THREADS = 5
-
+    q = Queue()
     chunked_urls = np.array_split(page_urls, THREADS)
     workers = []
     for worker_urls in chunked_urls:
-        workers.append(Thread(target=worker_get_images_urls, args=(worker_urls,)))
+        workers.append(Thread(target=worker_get_images_urls, args=(worker_urls, q)))
 
     for worker in workers:
         worker.start()
 
     for worker in workers:
         worker.join()
+    
+    image_urls = []
+    while not q.empty():
+        image_urls.append(q.get_nowait())
+    
+    return image_urls
 
-def worker_get_images_urls(page_urls):
+def worker_get_images_urls(page_urls, q):
     print('Handling {0} urls'.format(len(page_urls)))
     server, driver, proxy = create_chrome_driver()
     image_urls = []
@@ -66,7 +74,8 @@ def worker_get_images_urls(page_urls):
     server.stop()
     driver.quit()
 
-    return all_image_urls
+    for url in all_image_urls:
+        q.put(url)
 
 def filter_image_urls(links):
     filtered = []
