@@ -49,11 +49,20 @@ if yesno() == 'y':
 else:
     YEAR_MONTH_IMAGES_ONLY = False
 
+## TODO:
+# only delete images that are older than a certain year? Maybe do some quick analysis - surely deleting pre-2015 images would be safe but also effective
+
 print("Do you wish to start image banishment? (y/n)")
 if input() == 'y':
     print("Be patient, this might take a while")
     start_time = time()
     pages = get_wordpress_pages(WORDPRESS_SITE_URL)
+
+    print("Wordpress Live URLs identified")
+    with open('wordpress_urls.log', 'w') as f:
+        for url in pages:
+            f.write(url + "\n")
+
     image_urls = get_images_urls(pages)
 
     with open('image_urls.log', 'w') as f:
@@ -79,7 +88,7 @@ if input() == 'y':
     if CREATE_BACKUP:
         create_backup(BANISHMENT_PATH, BACKUP_PATH, client)
 
-    delete_images(unreferenced, client, YEAR_MONTH_IMAGES_ONLY)
+    #delete_images(unreferenced, client, YEAR_MONTH_IMAGES_ONLY)
 
     print("Finished! Banishment took {0} seconds".format(time() - start_time))
     # TODO:
