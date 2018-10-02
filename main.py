@@ -88,7 +88,7 @@ if input() == 'y':
     if CREATE_BACKUP:
         create_backup(BANISHMENT_PATH, BACKUP_PATH, client)
 
-    #delete_images(unreferenced, client, YEAR_MONTH_IMAGES_ONLY)
+    delete_images(unreferenced, client, YEAR_MONTH_IMAGES_ONLY)
 
     print("Finished! Banishment took {0} seconds".format(time() - start_time))
     # TODO:
