@@ -45,6 +45,7 @@ def create_backup(remote_path, local_path, client):
     # set up the workers
     chunked_remote_paths = np.array_split(remote_paths, THREADS)
     chunked_local_paths = np.array_split(local_paths, THREADS)
+
     workers = []
     for _remote_paths, _local_paths, sftp in zip(chunked_remote_paths, chunked_local_paths, sftps):
         workers.append(Thread(target=copy_worker, args=(client, sftp, _remote_paths, _local_paths)))
@@ -56,11 +57,10 @@ def create_backup(remote_path, local_path, client):
         worker.join()
 
 def copy_worker(client, sftp, remote_paths, local_paths):
-    assert len(remote_paths) is len(local_paths)
     i = 1
     for remote, local in zip(remote_paths, local_paths):
-        if i % 50 == 0:
-            print('{0}/{1} copied over {3}'.format(i, len(remote_paths), current_thread()))
+        if i % 500 == 0:
+            print('{0}/{1} copied over {2}'.format(i, len(remote_paths), current_thread()))
         try:
             sftp.get(remote, local)
         except SSHException:
