@@ -4,6 +4,8 @@ from lib.ssh_client import Client
 from lib.remote import get_all_image_paths, delete_images
 from lib.cross_reference import get_unreferenced_image_paths
 from lib.backup import create_backup
+from paramiko.sftp_client import SFTPClient
+from paramiko.ssh_exception import ChannelException
 from pprint import pprint
 from time import time
 
@@ -71,7 +73,19 @@ if input() == 'y':
 
     print("HARs analyzed, all image URLs have been logged. {0} seconds so far.".format(time() - start_time))
 
+    ## NOTE
+    # This creates the ~10 SFTP objects that can be used for either single or multithreading
+    # the I/O jobs
     client = Client(USERNAME, SERVER_URL, KEY_PATH, PASSPHRASE)
+    MAX_THREADS = 10
+    print('Attempting to open {0} channels'.format(MAX_THREADS))
+    sftps = []
+    for i in range(MAX_THREADS):
+        try:
+            sftps.append(SFTPClient.from_transport(client.client.get_transport()))
+        except ChannelException:
+            break
+
     image_paths = get_all_image_paths(client, BANISHMENT_PATH)
     with open('image_paths.log', 'w') as f:
         for path in image_paths:
@@ -79,16 +93,16 @@ if input() == 'y':
     print("All image paths on the server have been logged. {0} seconds so far.".format(time() - start_time))
 
     base_url = WORDPRESS_SITE_URL[(WORDPRESS_SITE_URL.find("//") + 2):]
-    unreferenced = get_unreferenced_image_paths(image_paths, image_urls, base_url)
+    unreferenced = get_unreferenced_image_paths(image_paths, image_urls, base_url, YEAR_MONTH_IMAGES_ONLY)
     with open('images_to_delete.log', 'w') as f:
         for path in unreferenced:
             f.write(path + "\n")
     print("Unreferenced images identified. {0} seconds so far.\n{1} / {2} images are unreferenced".format(time() - start_time, len(unreferenced), len(image_paths)))
 
     if CREATE_BACKUP:
-        create_backup(BANISHMENT_PATH, BACKUP_PATH, client)
+        create_backup(BANISHMENT_PATH, BACKUP_PATH, client, sftps)
 
-    delete_images(unreferenced, client, YEAR_MONTH_IMAGES_ONLY)
+    delete_images(unreferenced, sftps)
 
     print("Finished! Banishment took {0} seconds".format(time() - start_time))
     # TODO:

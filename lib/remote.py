@@ -3,20 +3,33 @@ import re
 from lib.analyze_har import filter_image_urls
 from progress.spinner import Spinner
 from progress.bar import IncrementalBar
+from threading import Thread, current_thread
+import numpy as np
 
 # handles all remote work
 ##TODO:
 # asynchronize the calls?
 
-def delete_images(paths, ssh_client, year_month_images_only):
-    paths = [path for path in paths if is_year_month(path)]
+def delete_images(paths, sftps):
     print("Banishing {0} images".format(len(paths)))
-    suffix = '%(percent)d%% [%(elapsed_td)s / %(eta)d / %(eta_td)s]'
-    bar = IncrementalBar('Deleting Images', max=len(paths), suffix=suffix)
-    for path in paths:
-        ssh_client.do("rm -f {0}".format(path))
-        bar.next()
-    bar.finish()
+    THREADS = len(sftps)
+    chunked_paths = np.array_split(paths, THREADS)
+    workers = []
+
+    for _paths, _sftp in zip(chunked_paths, sftps):
+        workers.append(Thread(target=delete_worker_task, args=(_paths, _sftp)))
+    
+    for worker in workers:
+        worker.start()
+    
+    for worker in workers:
+        worker.join()
+
+def delete_worker_task(paths, sftp):
+    for i, path in enumerate(paths):
+        if i % 500 == 0:
+            print('{0}/{1} images deleted {2}'.format(i, len(paths), current_thread()))
+        sftp.remove(path)
 
 def get_all_image_paths(ssh_client, directory):
     ssh_client.do("cd " + directory)
@@ -24,12 +37,6 @@ def get_all_image_paths(ssh_client, directory):
     paths = crawl_directory(ssh_client, directory, spinner)
     print()
     return filter_image_urls(paths)
-
-def is_year_month(path):
-    indices = [m.start() for m in re.finditer("[0-9][0-9][0-9][0-9]/[0-9][0-9]", path)]
-    # if it finds a match, indices will be populated
-    return len(indices) > 0
-
 
 def crawl_directory(ssh_client, directory, spinner):
     spinner.next()
@@ -42,7 +49,6 @@ def crawl_directory(ssh_client, directory, spinner):
         new_path = directory + "/" + folder
         paths += crawl_directory(ssh_client, new_path, spinner)
     return paths
-
 
 def get_names_only(data):
     lines = data.split("\n")

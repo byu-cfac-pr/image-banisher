@@ -10,7 +10,7 @@ from paramiko.ssh_exception import ChannelException, SSHException
 from threading import Thread, current_thread
 
 
-def create_backup(remote_path, local_path, client):
+def create_backup(remote_path, local_path, client, sftps):
     sftp = client.client.open_sftp()
     print("Collecting paths to copy")
     spinner = Spinner('Collecting...')
@@ -30,14 +30,7 @@ def create_backup(remote_path, local_path, client):
     print('Copying files over')
     ## Create worker threads
     # first check how many channels are allowed
-    MAX_THREADS = 10
-    print('Attempting to open {0} channels'.format(MAX_THREADS))
-    sftps = []
-    for i in range(MAX_THREADS):
-        try:
-            sftps.append(SFTPClient.from_transport(client.client.get_transport()))
-        except ChannelException:
-            break
+    
 
     THREADS = len(sftps)
     print('Opening {0} channels'.format(THREADS))

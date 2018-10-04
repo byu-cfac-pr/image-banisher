@@ -22,9 +22,9 @@ from queue import Queue
 ## TODO: 
 # use threading in order to drastically speed this process up. 
 
-def get_images_urls(page_urls):
+def get_images_urls(page_urls, threads=5):
     print('5 WORKER THREADS BEING INITIALIZED')
-    THREADS = 5
+    THREADS = threads
     q = Queue()
     chunked_urls = np.array_split(page_urls, THREADS)
     workers = []
