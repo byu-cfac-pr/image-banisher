@@ -6,10 +6,6 @@ from progress.bar import IncrementalBar
 from threading import Thread, current_thread
 import numpy as np
 
-# handles all remote work
-##TODO:
-# asynchronize the calls?
-
 def delete_images(paths, sftps):
     print("Banishing {0} images".format(len(paths)))
     THREADS = len(sftps)

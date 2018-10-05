@@ -14,13 +14,7 @@ import re
 import numpy as np
 from threading import Thread
 from queue import Queue
-## TODO:
-# need to add some selenium logic
-# - scroll through a website to force loading of all images
-# - scroll through slider if present
 
-## TODO: 
-# use threading in order to drastically speed this process up. 
 
 def get_images_urls(page_urls, threads=5):
     print('5 WORKER THREADS BEING INITIALIZED')
