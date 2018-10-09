@@ -65,7 +65,7 @@ if input() == 'y':
         for url in pages:
             f.write(url + "\n")
 
-    image_urls = get_images_urls(pages)
+    image_urls = get_images_urls(pages, threads=5)
 
     with open('image_urls.log', 'w') as f:
         for url in image_urls:

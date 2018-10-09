@@ -17,7 +17,7 @@ from queue import Queue
 
 
 def get_images_urls(page_urls, threads=5):
-    print('5 WORKER THREADS BEING INITIALIZED')
+    print('{0} WORKER THREADS BEING INITIALIZED'.format(threads))
     THREADS = threads
     q = Queue()
     chunked_urls = np.array_split(page_urls, THREADS)
@@ -34,7 +34,6 @@ def get_images_urls(page_urls, threads=5):
     image_urls = []
     while not q.empty():
         image_urls.append(q.get_nowait())
-    
     return image_urls
 
 def worker_get_images_urls(page_urls, q):
@@ -42,8 +41,6 @@ def worker_get_images_urls(page_urls, q):
     server, driver, proxy = create_chrome_driver()
     image_urls = []
 
-    #suffix = '%(percent)d%% [%(elapsed_td)s / %(eta)d / %(eta_td)s]'
-    #bar = IncrementalBar('Loading Webpages', max=len(page_urls), suffix=suffix)
     for c, url in enumerate(page_urls):
         if c % 5 == 0:
             print('{0} / {1} completed'.format(c, len(page_urls)))
@@ -60,8 +57,6 @@ def worker_get_images_urls(page_urls, q):
         html_urls = filter_image_urls(html_urls)
         links = [x['request']['url'] for x in proxy.har['log']['entries']]
         image_urls += filter_image_urls(links)
-        #bar.next()
-    #bar.finish()
     
     all_image_urls = list(set(image_urls + html_urls))
 

@@ -40,7 +40,6 @@ def filter_base_images(paths):
     filtered_paths = paths.copy()
     suffix = '%(percent)d%% [%(elapsed_td)s / %(eta)d / %(eta_td)s]'
     bar = IncrementalBar('Filtering mirror images', max=len(paths), suffix=suffix)   
-    patterns = []
     for path in paths:
         # matches paths with a hyphen followed by a 30+ alphanumeric character hash, and then the filepath extension
         # we could do 42+ as aforementioned, but I'm playing it safe with 30. Better safe than sorry, 
@@ -51,13 +50,10 @@ def filter_base_images(paths):
         if len(indices) > 0:
             # construct what must be the base image path
             begin = indices[0]
-            patterns.append(path[path.rfind('/')+1:begin])
-
-            #filtered_paths = list(filter(lambda x: re.search('{0}\.'.format(pattern), x) == None, filtered_paths))
+            pattern = path[path.rfind('/')+1:begin]
+            filtered_paths = list(filter(lambda x: re.search('{0}\.'.format(pattern), x) == None, filtered_paths))
         bar.next()
-    filtered_paths = list(filter(lambda path: all([re.search('{0}\.'.format(pattern), path) == None for pattern in patterns]), filtered_paths))
     bar.finish()
-
     return filtered_paths
 
 def is_year_month(path):
