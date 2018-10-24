@@ -1,7 +1,7 @@
 import requests as http
 from pprint import pprint
 from progress.bar import IncrementalBar
-
+"""
 def get_wordpress_pages(base_url):
     BASE_PAGES_ENDPOINT = base_url + "/wp-json/wp/v2/pages?per_page=100&page="
     BASE_POSTS_ENDPOINT = base_url + "/wp-json/wp/v2/posts?per_page=100&page="
@@ -36,3 +36,12 @@ def get_wordpress_pages(base_url):
 
 def get_links(data):
     return [x['link'] for x in data]
+"""
+def get_wordpress_pages():
+    # data should be in links.txt
+    links = []
+    with open('links.txt') as f:
+        for line in f.readlines():
+            i = line.find('http')
+            links.append(line[i:(line.find('\t', i + 1))])
+    return links

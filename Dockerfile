@@ -1,1 +1,3 @@
-FROM wordpress:php7.1-apache
+FROM wordpress:latest
+
+EXPOSE 80
