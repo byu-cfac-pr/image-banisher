@@ -6,7 +6,8 @@ services: # configuring each container
   db: # name of our mysql container
     image: mysql:5.7 # which image to pull, in this case specifying v. 5.7
     volumes: # data to map to the container
-      - ./backups/backup.sql.gz:/docker-entrypoint-initdb.d/backup.sql.gz # where to find our data -- we'll talk more about this
+      - ./backups/cfac-sandbox-backup.1.sql:/docker-entrypoint-initdb.d/backup.sql
+      # where to find our data -- we'll talk more about this
     restart: always # always restart the container after reboot
     environment: # environment variables -- mysql options in this case
       MYSQL_ROOT_PASSWORD: wordpress
@@ -17,9 +18,11 @@ services: # configuring each container
   wordpress: # name of our wordpress container
     depends_on: # container dependencies that need to be running first
       - db
-    build: .
+    build:
+      context: ./docker
+      dockerfile: Dockerfile-wordpress
     ports:
-      - "8000:80" # setting our ports for networking
+      - "80:80" # setting our ports for networking
       - "443:443"
     restart: always
     environment:
@@ -28,4 +31,13 @@ services: # configuring each container
       WORDPRESS_DB_USER: cfacprwe_cfacpr
       WORDPRESS_DB_PASSWORD: "BYUd0mainz" # matches the password set in the db container
     volumes: # this is where we tell Docker what to pay attention to
-      - ./cfac.byu.edu:/var/www/html/ 
+      - ./cfac-sandbox.byu.edu:/var/www/html/ 
+  
+  sshd:
+    image: hermsi/alpine-sshd
+    environment: 
+      - ROOT_PASSWORD=cupcakes
+    ports:
+      - "8080:22"
+    volumes: # this is where we tell Docker what to pay attention to
+      - ./cfac-sandbox.byu.edu:/var/www/html/

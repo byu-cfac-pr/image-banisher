@@ -15,13 +15,13 @@ from time import time
 Image Banishment Wizard that deletes unreferenced images for a Wordpress website.
 """
 print("Welcome to the Image Banisher wizard!")
-
+CONFIG_FILE = 'config.yml'
 ## TODO:
 # only delete images that are older than a certain year? Maybe do some quick analysis - surely deleting pre-2015 images would be safe but also effective
 
 yaml = YAML(typ="safe")
 configs = {}
-with open('config.yml') as f:
+with open(CONFIG_FILE) as f:
     configs = yaml.load(f)
 
 WORDPRESS_SITE_URL = configs['wordpress']['url']
@@ -33,10 +33,20 @@ PASSPHRASE = configs['server']['passphrase']
 BANISHMENT_PATH = configs['server']['banishment_path']
 CREATE_BACKUP = configs['backup']['create_backup'] == 'true'
 BACKUP_PATH = configs['backup']['local_backup_path']
+LINKS_FILE_NAME = 'links.txt'
+
+## These arguments are optional in the config.yml
+optional_client_build_args = {}
+optional_args = ['port', 'password']
+for arg in optional_args:
+    try:
+        optional_client_build_args[arg] = configs[arg]
+    except KeyError:
+        pass
 
 print("Be patient, this might take a while")
 start_time = time()
-pages = get_wordpress_pages()
+pages = get_wordpress_pages(LINKS_FILE_NAME)
 
 print("Wordpress Live URLs identified")
 with open('wordpress_urls.log', 'w') as f:
@@ -54,7 +64,7 @@ print("HARs analyzed, all image URLs have been logged. {0} seconds so far.".form
 ## NOTE
 # This creates the ~10 SFTP objects that can be used for either single or multithreading
 # the I/O jobs
-client = Client(USERNAME, SERVER_URL, KEY_PATH, PASSPHRASE)
+client = Client(USERNAME, SERVER_URL, KEY_PATH, PASSPHRASE, optional_args=optional_client_build_args)
 MAX_THREADS = 10
 print('Attempting to open {0} channels'.format(MAX_THREADS))
 sftps = []

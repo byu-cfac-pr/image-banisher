@@ -37,10 +37,10 @@ def get_wordpress_pages(base_url):
 def get_links(data):
     return [x['link'] for x in data]
 """
-def get_wordpress_pages():
+def get_wordpress_pages(file_name):
     # data should be in links.txt
     links = []
-    with open('links.txt') as f:
+    with open(file_name) as f:
         for line in f.readlines():
             i = line.find('http')
             links.append(line[i:(line.find('\t', i + 1))])
